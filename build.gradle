@@ -1,0 +1,23 @@
+apply plugin: 'eclipse'
+apply plugin: 'java'
+
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src'
+        }
+        resources {
+            srcDir 'src'
+        }
+    }
+}
+
+compileJava {
+  options.encoding = 'UTF-8'  // 소스 파일의 인코딩을 알려준다.
+  sourceCompatibility = '1.8' // 어떤 자바 버전의 문법을 사용했는 지 알려준다.
+}
+
+
+
+//https://github.com/eomjinyoung/java89/blob/master/bit.java01/build.gradle
