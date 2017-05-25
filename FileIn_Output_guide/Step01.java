@@ -106,7 +106,7 @@ public class Step01 {
 
 
 public static void displayDirectory(File dir, int level) throws Exception{
-  File[] files = dir.listFiles((File file) -> {  //클로저라는 문법을 쓴거야!
+  File[] files = dir.listFiles((File file) -> {  //람다라는 표기법을! 쓴거야!
         if (file.isDirectory() || (file.isFile() && file.getName().endsWith(".class"))){
           return true;
         }    //디렉토리 거나 , 파일이고 끝이 .class 로 끝나?
@@ -142,8 +142,8 @@ file이라는 class는 1개씩 읽어온다 생각하고 전체를 알고 싶다
 */
 
 헛갈린다.
- FileInputStream  요놈이 입력시켜 화면에서 보기위해서 출력할때 read()
-  FileOutputStream  요놈이 출력시켜 입력할때   write()
+ FileInputStream  요놈이 !!입력!!시켜 화면에서 보기위해서 !!출력할때 read()
+  FileOutputStream  요놈이 !!출력!!시켜 !!입력할때   write()
 기본적으로 이 클래스의  read와 write는 1바이트씩 주고 읽는다는걸 기억 하자!
 
 Stream에서의 최상위 가장 소단위의 기능을 가진 이 객체는 무조건 1바이트씩이라
@@ -173,10 +173,25 @@ decorator는 accept를 이용한다! 상속과 달리 수퍼클레스는 다르�
 인헤릿은 필요없어도 기능을 받아들인다.
 
 
+/*
+Socket에 관하여! 소켓은 서버와 클라이언트에서 이용되는 클래스를 말한다.
+
+ ServerSocket serverSocket = new ServerSocket(8888); 야가 서버
+ Socket socket = new Socket("localhost",8888); 야가 클라
+
+
+ 항상 in/output stream이용시 .close()로 닫기!
+
+ sccaner와 printclass 에 대하여!
 
 
 
 
+
+
+
+
+*/
 
 
 
