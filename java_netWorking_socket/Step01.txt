@@ -1,0 +1,119 @@
+/* 소켓 프로그래밍 : 채팅 서버 만들기 - v1
+ * => 클라이언트와 연결한 후 메시지를 주고 받는다.
+ */
+
+
+ 자바는 객체의 사용
+ 객체 = class
+ ref var는 객체 주소이다.
+
+주소 와 주소의 연관성
+
+해시코드 ㅜㅠ
+
+
+1일차!
+-일부로 순서는 정하지 않았음!
+- 도구를 배우는 것이라 걍 외우는게 답
+- 왜 필요한지만 아세요! 왜 필요할까?!
+
+structure의 이해! ( 왜? 일단 돌아가는 순서부터!)
+
+현제 소스에서!
+
+socket : net연결을 위한 클래스
+
+1). systemical count
+method main의 class memb's listen(port)호출  - class memb's method with interface Runnable - class ChatJob's run()
+
+
+2). thread형 class의 형태를 알아볼것!
+interface Runnable: thread를 직접 상속 받는게 아닌 thread class 처럼 run() method를 사용할꺼야!
+
+
+
+3). 반복문
+왜?! - fileStream class에서는 Read write 든 1바이트 씩 읽어 온다는것을 알자
+     - 서버는 String 객체로 요청 받고 응답한다.
+     - 처음 읽어 올때 2바이트의 문자열을 먼저 일거 옴을 여기서 기억 하고 step2보기!
+     -
+     // println -> \n 으로 인식된 한줄 씩 읽어 오겟다는것!
+       String alias = in.readLine();
+       socket.getIn/OutputStream()은 통신상 socket 클래스에서 클라이언트에서 오는 자료를 처리한다.
+       (걍 API보셈 설명충도 설명하기 귀찮)
+
+4). 어떻게 읽어올까?!
+  -같은 lang의 경우 읽어 올때 형식을 조정하기 편하나
+  - 다른 lang간의 통신의 경우 String의 format이 일정하므로 String으로 한다!
+
+
+package step18;
+
+
+항상 API는 꼭꼭 보세요! 상속 관계도!
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+import com.google.gson.Gson;
+
+public class Test08_1 {
+
+  class ChatJob implements Runnable {
+    Socket socket ;
+
+    public ChatJob(Socket socket) {
+      this.socket = socket;
+    }
+
+    public void run() {
+      try (
+        Socket socket = this.socket;
+        BufferedReader in = new BufferedReader(
+                              new InputStreamReader(socket.getInputStream()));
+        PrintStream out = new PrintStream(socket.getOutputStream());
+      ) {
+
+      // \n 으로 인식된 한줄 씩 읽어 오겟다는것!
+        String alias = in.readLine();
+        out.printf("[%s]님이 입장하였습니다.\n", alias);
+
+        while (true) {
+          String message = in.readLine();
+          if (message == null) // 클라이언트에서 종료 신호를 보낸다면
+            break; // 입출력을 끝낸다.
+
+          out.println(message);
+
+// flush()는 bufferedStream에서 남은 데이터들 처리 할때 쓰는 메소드 꼭 써두도록 한다.
+
+          out.flush();
+
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
+  public void listen(int port) throws Exception {
+    ServerSocket serverSocket = new ServerSocket(port);
+    System.out.println("서버 실행 중...");
+
+    while (true) {
+
+      //Runnerble interface의 사용햇을때 이렇게 사용하세요!
+
+
+      new Thread(new ChatJob(serverSocket.accept())).start();
+    }
+  }
+
+  public static void main(String[] args) throws Exception {
+    Test08_1 server = new Test08_1();
+    server.listen(8888);
+  }
+}

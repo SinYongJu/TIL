@@ -1,0 +1,128 @@
+//2017_5_26 수업 시간중한 채팅 서버
+
+//다중 채팅의 구현
+전 버전은  sendAll의 구현이 없었음
+
+허구헌날 하면 서 잊지 말것
+
+자바는 객체의 사용
+객체 = class
+ref var는 객체 주소이다.
+주소 와 주소의 연관성
+해시코드 ㅜㅠ// 공부좀...
+
+핵심
+
+serialrized 를 위해서 ?! synchronized의 사용!
+
+ thread를 사용하는 이유
+
+ 자바에서는 자바스크립트(지금 까지 배운 랭)과는 달리 동기적인 기능있기 때문에 (js에서는 비동기 기능이 있음)
+ 비동기적인 일을 처리 해주기 위해서 thread를 사용한다.
+
+ 단, thread는 스택메모리를 각가의 thread가 사용하므로 인해 다루고자 하는 값(여기는 좀 고쳐봐야디...애매모호함)
+ 이 변경되거나 중복되는 경우로 인해서 오류를 발생하게 됨
+(할당 우선순위에 관해서는 구글링 하셈)
+ 그래서 이를 순차적으로 처리하기 위해서 synchronized 를 사용한다!
+
+
+
+/* 소켓 프로그래밍 : 채팅 서버 만들기 - v2
+ * => ChatJob들의 연락처를 구축하여 공유한다.
+ * => 이렇게 구축된 연락처는
+ *    클라이언트로부터 받은 메시지를 다른 클라이언트에게 보낼 때 사용한다.
+ */
+package step18;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.ArrayList;
+
+public class Test08_2 {
+
+//generic syntax의 사용! type의 적용!
+  ArrayList<ChatJob> chatJobs = new ArrayList<>();
+
+  public void listen(int port) throws Exception {
+    ServerSocket serverSocket = new ServerSocket(port);
+    System.out.println("서버 실행 중...");
+
+    while (true) {
+      new Thread(new ChatJob(serverSocket.accept())).start();
+    }
+  }
+
+  // 먼저 요청한 스레드 순서대로 작업을 실행시킨다. 뮤텍스 적용.
+  synchronized public void sendAll(String message) {  //뿌리는 역할 미드필더 지림
+    for (ChatJob cj : chatJobs){
+      System.out.println(cj);
+     }
+    for (int i = chatJobs.size() - 1; i >= 0; i--) {
+      try {
+        chatJobs.get(i).send(message);
+      } catch (Exception e) {
+        System.out.println(i);
+        chatJobs.remove(i);
+
+      }
+    }
+  }
+
+  public static void main(String[] args) throws Exception {
+    Test08_2 server = new Test08_2();
+    server.listen(8888);
+  }
+
+  class ChatJob implements Runnable {
+    Socket socket ;
+    String address;
+    PrintStream out; //공통 사용을 위해 instance memory에 띄운다
+
+
+
+
+
+
+    public ChatJob(Socket socket) {
+      this.socket = socket;
+      this.address =((InetSocketAddress)socket.getRemoteSocketAddress()).getHostString();
+
+      chatJobs.add(this);//클라와 와 연결된 thread의 주소를 저장하기 위함
+
+      System.out.println("클라이언트와 연결됨!");
+    }
+
+    public void run() {
+      try (
+        Socket socket = this.socket;
+        BufferedReader in = new BufferedReader(
+                              new InputStreamReader(socket.getInputStream()));
+        PrintStream out = new PrintStream(socket.getOutputStream());
+      ) {
+        this.out = out; // 다른 스레드가 메시지를 보낼 때 사용한다.
+        String alias = in.readLine();
+        sendAll(String.format("[%s:%s]님이 입장하였습니다.", alias,address));
+
+        while (true) {
+          String message = in.readLine();
+          if (message == null){ // 클라이언트에서 종료 신호를 보낸다면
+            sendAll(String.format("[%s:%s]님이 퇴장하셨습니다. ", alias,address));
+            break; // 입출력을 끝낸다.
+          }
+          sendAll(String.format("[%s:%s]%s", alias, address, message));
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+
+    public void send(String message) throws Exception {
+      out.println(message);
+      out.flush();
+    }
+  }
+}
